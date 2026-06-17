@@ -1,0 +1,32 @@
+module(
+    name = "rules_py_hermetic_launcher_repro",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "aspect_rules_py", version = "2.0.0")
+
+rules_py_version = "d7e3fea7c27d5fa2b03f66856a393b3dbd32ee2c"
+
+archive_override(
+    module_name = "aspect_rules_py",
+    integrity = "sha256-7Nrc7jDR1sa3OMKRPEbUhW01TOTTdtq8m0VxbOjeI34=",
+    strip_prefix = "rules_py-{}".format(rules_py_version),
+    urls = ["https://github.com/aspect-build/rules_py/archive/{}.zip".format(rules_py_version)],
+)
+
+bazel_dep(name = "rules_python", version = "2.0.1")
+
+python_version = "3.14.2"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.defaults(python_version = python_version)
+python.toolchain(python_version = python_version)
+
+interpreters = use_extension("@aspect_rules_py//py:extensions.bzl", "python_interpreters")
+interpreters.toolchain(
+    is_default = True,
+    python_version = python_version,
+)
+use_repo(interpreters, "python_interpreters")
+
+register_toolchains("@python_interpreters//:all")
